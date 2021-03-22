@@ -74,8 +74,8 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 		record["ts"] = timestamp
 		rs = append(rs, record)
 	}
-	err := SaveRecords(values["bucket"], values["prefix"], C.GoString(tag), rs)
-	if err != nil {
+
+	if err := SaveRecords(values["bucket"], values["prefix"], C.GoString(tag), rs); err != nil {
 		log.Printf("[warn] error sending message in GCS: %v\n", err)
 		return output.FLB_RETRY
 	}
