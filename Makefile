@@ -40,7 +40,7 @@ build:
 	touch $@
 
 run:
-	docker run -it -p 24224:24224 -v ($PWD)/credentials.json:/fluent-bit/etc/credentials.json fluent-bit-out-gcs:$(IMAGE_TAG)
+	docker run -it -p 2020:2020 -p 24224:24224 -v $(shell pwd)/credentials.json:/fluent-bit/etc/credentials.json -v $(shell pwd)/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf fluent-bit-out-gcs:$(IMAGE_TAG)
 
 helm:
 	helm package helm/* --destination ${HELM_REGISTRY_PATH}
