@@ -13,7 +13,7 @@ endif
 CURRENT_OS_ARCH=$(shell echo `go env GOOS`-`go env GOARCH`)
 GOBIN?=$(shell echo `go env GOPATH`/bin)
 
-IMAGE_TAG:=$(shell ./container/image-tag.sh)
+IMAGE_TAG:=$(shell git rev-parse HEAD)
 VCS_REF:=$(shell git rev-parse HEAD)
 BUILD_DATE:=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
@@ -23,7 +23,7 @@ HELM_REGISTRY_URL="https://releases.universe.sh/helm/"
 all: release
 
 release:
-	go build -buildmode=c-shared -o build/out_gcs.so $(LDFLAGS) -ldflags "-X main.version=$(shell ./container/image-tag.sh)";
+	go build -buildmode=c-shared -o build/out_gcs.so -ldflags "-X main.version=$(shell ./container/image-tag.sh)";
 
 clean:
 	go clean
@@ -32,15 +32,15 @@ clean:
 test:
 	PATH="${PWD}/bin:${PWD}/test/bin:${PATH}" go test ${TEST_FLAGS} $(shell go list ./... | sort -u)
 
-build: container/Dockerfile
-	mkdir -p ./build/
-	cp $^ ./build/
-	cp plugins.conf ./build/
-	$(SUDO) docker build -t quay.io/universe-sh/fluent-bit-out-gcs -t quay.io/universe-sh/fluent-bit-out-gcs:$(IMAGE_TAG) \
+build:
+	$(SUDO) docker build -t fluent-bit-out-gcs:$(IMAGE_TAG) \
 		--build-arg VCS_REF="$(VCS_REF)" \
 		--build-arg BUILD_DATE="$(BUILD_DATE)" \
-		-f build/Dockerfile ./build/
+		-f Dockerfile .
 	touch $@
+
+run:
+	docker run -it -p 24224:24224 -v ($PWD)/credentials.json:/fluent-bit/etc/credentials.json fluent-bit-out-gcs:$(IMAGE_TAG)
 
 helm:
 	helm package helm/* --destination ${HELM_REGISTRY_PATH}
